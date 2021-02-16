@@ -38,7 +38,10 @@ bot.on("message", (msg) => {
 			axios.get(url).then((response) => {
 				for (const keyWord of keyWords) {
 					if (response.data.toLowerCase().indexOf(keyWord, 0) >= 0) {
-						console.log("Finds", keyWord);
+						bot.sendMessage(
+							chatId,
+							`Бот обнаружил из последних постов пост из словом '${keyWord}'.`
+						);
 					}
 				}
 			});
