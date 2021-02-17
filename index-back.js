@@ -26,25 +26,48 @@ const keyWords = [
 	"строкової",
 	"строкову",
 	"призовів",
-	"звільнення",
 ];
+
+const rememberedPosts = [];
+
+const parseFunc = (html) => {
+	const $ = cheerio.load(html);
+	$("div#res").each(function (_, element) {
+		$("div.doc_item", element).each((_, postHtml) => {
+			// console.log("AAAAAAAAAAAA", $(postHtml).html());
+			const postText = $("div.doc_text p", postHtml).text();
+
+			const postDate = $("p.doc_date", postHtml).text();
+
+			const postTitle = $("h3 a", postHtml).text();
+
+			if (rememberedPosts.findIndex((rp) => rp.title === postTitle) < 0) {
+				rememberedPosts.push({
+					title: postTitle,
+					date: postDate,
+					text: postText,
+				});
+
+				for (const keyWord of keyWords) {
+					if (postText.toLowerCase().indexOf(keyWord, 0) >= 0) {
+					}
+				}
+			}
+		});
+	});
+};
 
 bot.on("message", (msg) => {
 	const chatId = msg.chat.id;
 	bot.sendMessage(chatId, "Леха ╮(￣_￣)╭!");
 
 	if (msg.text && msg.text === "start sending") {
-		setInterval(() => {
-			axios.get(url).then((response) => {
-				for (const keyWord of keyWords) {
-					if (response.data.toLowerCase().indexOf(keyWord, 0) >= 0) {
-						bot.sendMessage(
-							chatId,
-							`Бот обнаружил из последних постов пост из словом '${keyWord}'.`
-						);
-					}
-				}
-			});
-		}, 1000);
+		// setInterval(() => {
+		axios.get(url).then((response) => {
+			parseFunc(response.data);
+			for (const keyWord of keyWords) {
+			}
+		});
+		// }, 1000);
 	}
 });
