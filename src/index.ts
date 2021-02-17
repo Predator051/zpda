@@ -54,7 +54,7 @@ createConnection("default").then(async () => {
 
 	const parseFunc = (html: string) => {
 		const $ = cheerio.load(html);
-		$("div#res").each(function (_, element) {
+		$("div#res").each(async function (_, element) {
 			$("div.doc_item", element).each(async (_, postHtml) => {
 				const postText = $("div.doc_text p", postHtml).text().trim();
 
@@ -72,17 +72,13 @@ createConnection("default").then(async () => {
 
 					await manager.save(newPost);
 
-					for (const keyWord of keyWords) {
-						if (postText.toLowerCase().indexOf(keyWord, 0) < 0) {
-							const allUsers = await manager.find(User, {});
+					const allUsers = await manager.find(User, {});
 
-							for (const user of allUsers) {
-								await bot.sendMessage(
-									user.chatId,
-									`Вышел новый указ: \n${newPost.title} \n${postDate} \n${postText}`
-								);
-							}
-						}
+					for (const user of allUsers) {
+						await bot.sendMessage(
+							user.chatId,
+							`Вышел новый указ: \n${newPost.title} \n${postDate} \n${postText}`
+						);
 					}
 				}
 			});
@@ -117,20 +113,23 @@ createConnection("default").then(async () => {
 	bot.on("message", async (msg) => {
 		const chatId = msg.chat.id;
 
-		const isUserExist =
-			(await manager.find(User, { chatId: chatId })) !== undefined;
+		const foundUser = await manager.findOne(User, { chatId: chatId });
+		const isUserExist = foundUser !== undefined;
 
-		if (!isUserExist) {
+		if (!isUserExist && msg.text && msg.text !== "/start") {
 			bot.sendMessage(chatId, "Нажми /start !");
 		} else {
+			console.log("request from ", foundUser?.chatId);
+
 			if (msg.text && msg.text === "/start") {
-				const user = await manager.find(User, { chatId: chatId });
+				const user = foundUser;
 
 				if (user === undefined) {
 					const newUser = new User();
 					newUser.chatId = msg.chat.id;
 
 					const saved = await manager.save(newUser);
+					console.log("saved user", saved);
 
 					if (saved) {
 						bot.sendMessage(
@@ -179,8 +178,8 @@ createConnection("default").then(async () => {
 	bot.on("callback_query", async (msg) => {
 		const chatId = msg.message.chat.id;
 
-		const isUserExist =
-			(await manager.find(User, { chatId: chatId })) !== undefined;
+		const foundUser = await manager.findOne(User, { chatId: chatId });
+		const isUserExist = foundUser !== undefined;
 
 		if (!isUserExist) {
 			bot.sendMessage(chatId, "Нажми /start !");
@@ -193,5 +192,5 @@ createConnection("default").then(async () => {
 		axios.get(url).then((response) => {
 			parseFunc(response.data);
 		});
-	}, 5000);
+	}, 5000 * 12 * 5);
 });
