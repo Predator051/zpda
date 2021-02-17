@@ -10,12 +10,14 @@ import express from "express";
 
 var app = express();
 
+var port = process.env.PORT ? parseInt(process.env.PORT) : 8443;
+
 app
 	.get("/", function (request, response) {
 		var result = "App is running";
 		response.send(result);
 	})
-	.listen(app.get("port"), function () {
+	.listen(port, function () {
 		console.log(
 			"App is running, server is listening on port ",
 			app.get("port")
@@ -45,8 +47,6 @@ createConnection("default").then(async () => {
 		"призовів",
 	];
 
-	var port = process.env.PORT ? parseInt(process.env.PORT) : 8443;
-	var host = process.env.HOST;
 	var bot = new TelegramBot(token, {
 		polling: true,
 	});
