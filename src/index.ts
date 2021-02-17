@@ -6,6 +6,21 @@ import axios from "axios";
 import cheerio from "cheerio";
 import { Post } from "./entity/posts";
 import fs from "fs";
+import express from "express";
+
+var app = express();
+
+app
+	.get("/", function (request, response) {
+		var result = "App is running";
+		response.send(result);
+	})
+	.listen(app.get("port"), function () {
+		console.log(
+			"App is running, server is listening on port ",
+			app.get("port")
+		);
+	});
 
 createConnection("default").then(async () => {
 	const token = "1461737782:AAG-YX00fKSSM65n9IyF6z5XZmC754FpgaU";
@@ -30,7 +45,9 @@ createConnection("default").then(async () => {
 		"призовів",
 	];
 
-	const bot = new TelegramBot(token, {
+	var port = process.env.PORT ? parseInt(process.env.PORT) : 8443;
+	var host = process.env.HOST;
+	var bot = new TelegramBot(token, {
 		polling: true,
 	});
 	const manager = getMongoManager();
@@ -116,7 +133,12 @@ createConnection("default").then(async () => {
 						{
 							reply_markup: {
 								inline_keyboard: [
-									[{ text: "Последний приказ", callback_data: "last_post" }],
+									[
+										{
+											text: "Последний приказ",
+											callback_data: "last_post",
+										},
+									],
 								],
 							},
 						}
