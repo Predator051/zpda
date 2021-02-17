@@ -163,10 +163,10 @@ createConnection("default").then(async () => {
 			await lastPostFunc(chatId);
 		}
 
-		// if (msg.text && msg.text === "/dukalos") {
-		// 	const buffer = fs.readFileSync(__dirname + "/dakalo.jpg");
-		// 	bot.sendPhoto(chatId, buffer);
-		// }
+		if (msg.text && msg.text === "/dukalos") {
+			const buffer = fs.readFileSync(__dirname + "/dakalo.jpg");
+			bot.sendPhoto(chatId, buffer);
+		}
 	});
 
 	bot.on("callback_query", async (msg) => {
