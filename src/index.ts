@@ -117,61 +117,76 @@ createConnection("default").then(async () => {
 	bot.on("message", async (msg) => {
 		const chatId = msg.chat.id;
 
-		if (msg.text && msg.text === "/start") {
-			const user = await manager.find(User, { chatId: chatId });
+		const isUserExist =
+			(await manager.find(User, { chatId: chatId })) !== undefined;
 
-			if (user === undefined) {
-				const newUser = new User();
-				newUser.chatId = msg.chat.id;
+		if (!isUserExist) {
+			bot.sendMessage(chatId, "Нажми /start !");
+		} else {
+			if (msg.text && msg.text === "/start") {
+				const user = await manager.find(User, { chatId: chatId });
 
-				const saved = await manager.save(newUser);
+				if (user === undefined) {
+					const newUser = new User();
+					newUser.chatId = msg.chat.id;
 
-				if (saved) {
-					bot.sendMessage(
-						chatId,
-						"Алексей, сын Алексея, из дома Алексеева, приветствует тебя, stranger!",
-						{
-							reply_markup: {
-								inline_keyboard: [
-									[
-										{
-											text: "Последний приказ",
-											callback_data: "last_post",
-										},
+					const saved = await manager.save(newUser);
+
+					if (saved) {
+						bot.sendMessage(
+							chatId,
+							"Алексей, сын Алексея, из дома Алексеева, приветствует тебя, stranger!",
+							{
+								reply_markup: {
+									inline_keyboard: [
+										[
+											{
+												text: "Последний приказ",
+												callback_data: "last_post",
+											},
+										],
 									],
-								],
-							},
-						}
-					);
+								},
+							}
+						);
+					}
 				}
+
+				bot.sendMessage(
+					chatId,
+					"Алексей, сын Алексея, из дома Алексеева, приветствует тебя, stranger!",
+					{
+						reply_markup: {
+							inline_keyboard: [
+								[{ text: "Последний приказ", callback_data: "last_post" }],
+							],
+						},
+					}
+				);
 			}
 
-			bot.sendMessage(
-				chatId,
-				"Алексей, сын Алексея, из дома Алексеева, приветствует тебя, stranger!",
-				{
-					reply_markup: {
-						inline_keyboard: [
-							[{ text: "Последний приказ", callback_data: "last_post" }],
-						],
-					},
-				}
-			);
-		}
+			if (msg.text && msg.text === "/last_post") {
+				await lastPostFunc(chatId);
+			}
 
-		if (msg.text && msg.text === "/last_post") {
-			await lastPostFunc(chatId);
-		}
-
-		if (msg.text && msg.text === "/dukalos") {
-			const buffer = fs.readFileSync(__dirname + "/dakalo.jpg");
-			bot.sendPhoto(chatId, buffer);
+			if (msg.text && msg.text === "/dukalos") {
+				const buffer = fs.readFileSync(__dirname + "/dakalo.jpg");
+				bot.sendPhoto(chatId, buffer);
+			}
 		}
 	});
 
 	bot.on("callback_query", async (msg) => {
 		const chatId = msg.message.chat.id;
-		await lastPostFunc(chatId);
+
+		const isUserExist =
+			(await manager.find(User, { chatId: chatId })) !== undefined;
+
+		if (!isUserExist) {
+			bot.sendMessage(chatId, "Нажми /start !");
+		} else {
+			await lastPostFunc(chatId);
+		}
 	});
 
 	setInterval(() => {
