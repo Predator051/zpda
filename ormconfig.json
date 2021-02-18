@@ -1,7 +1,10 @@
 {
-	"type": "mongodb",
-	"url": "mongodb+srv://user0:user0@cluster0.suflq.mongodb.net/zpa?retryWrites=true&w=majority",
-	"useNewUrlParser": true,
+	"type": "postgres",
+	"host": "localhost",
+	"port": 5432,
+	"username": "user0",
+	"password": "user0",
+	"database": "zpa",
 	"synchronize": true,
 	"logging": true,
 	"entities": ["src/entity/*.*"],

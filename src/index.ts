@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { User } from "./entity/users";
-import { createConnection, getMongoManager } from "typeorm";
+import { createConnection, getRepository } from "typeorm";
 import TelegramBot from "node-telegram-bot-api";
 import axios from "axios";
 import cheerio from "cheerio";
@@ -50,7 +50,6 @@ createConnection("default").then(async () => {
 	var bot = new TelegramBot(token, {
 		polling: true,
 	});
-	const manager = getMongoManager();
 
 	const parseFunc = (html: string) => {
 		const $ = cheerio.load(html);
@@ -62,7 +61,9 @@ createConnection("default").then(async () => {
 
 				const postTitle = $("h3 a", postHtml).text().trim();
 
-				const foundPost = await manager.findOne(Post, { title: postTitle });
+				const foundPost = await getRepository(Post).findOne({
+					title: postTitle,
+				});
 
 				if (foundPost === undefined) {
 					const newPost = new Post();
@@ -70,9 +71,9 @@ createConnection("default").then(async () => {
 					newPost.text = postText;
 					newPost.title = postTitle;
 
-					await manager.save(newPost);
+					await getRepository(Post).save(newPost);
 
-					const allUsers = await manager.find(User, {});
+					const allUsers = await getRepository(User).find();
 
 					for (const user of allUsers) {
 						await bot.sendMessage(
@@ -86,7 +87,7 @@ createConnection("default").then(async () => {
 	};
 
 	const lastPostFunc = async (chatId: number) => {
-		const allPosts = await manager.find(Post);
+		const allPosts = await getRepository(Post).find();
 
 		let lastNumber = 0;
 		//УКАЗ ПРЕЗИДЕНТА УКРАЇНИ №55/2021
@@ -113,7 +114,7 @@ createConnection("default").then(async () => {
 	bot.on("message", async (msg) => {
 		const chatId = msg.chat.id;
 
-		const foundUser = await manager.findOne(User, { chatId: chatId });
+		const foundUser = await getRepository(User).findOne({ chatId: chatId });
 		const isUserExist = foundUser !== undefined;
 
 		if (!isUserExist && msg.text && msg.text !== "/start") {
@@ -128,7 +129,7 @@ createConnection("default").then(async () => {
 					const newUser = new User();
 					newUser.chatId = msg.chat.id;
 
-					const saved = await manager.save(newUser);
+					const saved = await getRepository(User).save(newUser);
 					console.log("saved user", saved);
 
 					if (saved) {
@@ -178,7 +179,7 @@ createConnection("default").then(async () => {
 	bot.on("callback_query", async (msg) => {
 		const chatId = msg.message.chat.id;
 
-		const foundUser = await manager.findOne(User, { chatId: chatId });
+		const foundUser = await getRepository(User).findOne({ chatId: chatId });
 		const isUserExist = foundUser !== undefined;
 
 		if (!isUserExist) {
@@ -192,5 +193,5 @@ createConnection("default").then(async () => {
 		axios.get(url).then((response) => {
 			parseFunc(response.data);
 		});
-	}, 5000 * 12 * 5);
+	}, 5000);
 });
